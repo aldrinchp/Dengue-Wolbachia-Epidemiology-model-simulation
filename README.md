@@ -1,23 +1,23 @@
 # dengue-wolbachia
 
-Modelo epidemiológico de dengue con control biológico por *Wolbachia*: un
-sistema de 8 ecuaciones diferenciales ordinarias que acopla mosquitos
-silvestres, mosquitos portadores de *Wolbachia* y humanos con dinámica SIRS.
+Epidemiological model of dengue with biological control via *Wolbachia*: a
+system of 8 ordinary differential equations coupling wild mosquitoes,
+Wolbachia-carrying mosquitoes, and humans with SIRS dynamics.
 
-Este proyecto simula **un solo caso**: la línea base (sin control) contra
-una liberación única de mosquitos wMel (reemplazo poblacional) en $t=0$,
-para mostrar cómo *Wolbachia* actúa como control biológico del dengue.
+This project simulates **a single case**: the baseline (no control) versus
+a single release of wMel mosquitoes (population replacement) at $t=0$,
+to show how *Wolbachia* acts as a biological control for dengue.
 
-> **Nota sobre los parámetros.** Todos los valores numéricos en
-> `config/config.yaml` son **PROVISIONALES** (órdenes de magnitud de
-> literatura general sobre *Aedes aegypti*, con la unidad de tiempo en
-> días) y están marcados explícitamente como tales en el archivo.
-> Reemplázalos por los valores de tu referencia bibliográfica antes de usar
-> los resultados en un informe.
+> **Note on the parameters.** All numerical values in
+> `config/config.yaml` are **PROVISIONAL** (order-of-magnitude figures from
+> the general literature on *Aedes aegypti*, with the time unit in
+> days) and are explicitly marked as such in the file.
+> Replace them with the values from your bibliographic reference before using
+> the results in a report.
 
-## Instalación
+## Installation
 
-Requiere Python ≥ 3.10.
+Requires Python ≥ 3.10.
 
 ```bash
 cd dengue-wolbachia
@@ -26,25 +26,25 @@ source .venv/bin/activate
 pip install -e ".[test]"
 ```
 
-Sin dependencias más allá de `numpy`, `scipy`, `matplotlib`, `pyyaml` y
-`pytest` (declaradas en `pyproject.toml`).
+No dependencies beyond `numpy`, `scipy`, `matplotlib`, `pyyaml`, and
+`pytest` (declared in `pyproject.toml`).
 
-## Formulación matemática
+## Mathematical formulation
 
-### Variables de estado
+### State variables
 
-| Variable | Significado |
+| Variable | Meaning |
 |---|---|
-| $N_{FS}$ | hembras silvestres susceptibles al dengue |
-| $N_{FI}$ | hembras silvestres infectadas de dengue |
-| $N_M$    | machos silvestres |
-| $W_F$    | hembras portadoras de *Wolbachia* |
-| $W_M$    | machos portadores de *Wolbachia* |
-| $S$      | humanos susceptibles |
-| $I$      | humanos infectados |
-| $R$      | humanos recuperados (inmunidad temporal) |
+| $N_{FS}$ | wild females susceptible to dengue |
+| $N_{FI}$ | wild females infected with dengue |
+| $N_M$    | wild males |
+| $W_F$    | Wolbachia-carrying females |
+| $W_M$    | Wolbachia-carrying males |
+| $S$      | susceptible humans |
+| $I$      | infected humans |
+| $R$      | recovered humans (temporary immunity) |
 
-con las cantidades auxiliares
+with the auxiliary quantities
 
 $$
 P = N_{FS}+N_{FI}+N_M+W_F+W_M, \qquad
@@ -52,7 +52,7 @@ H = S+I+R, \qquad
 CI = \frac{N_M}{W_M+N_M}.
 $$
 
-### Sistema de EDOs
+### System of ODEs
 
 $$
 \begin{aligned}
@@ -67,109 +67,109 @@ $$
 \end{aligned}
 $$
 
-implementado en [`src/dengue_wolbachia/model.py`](src/dengue_wolbachia/model.py)
-como la función pura `rhs(t, y, params)`, sin estado global, lista para usar
-como `args` de `scipy.integrate.solve_ivp`.
+implemented in [`src/dengue_wolbachia/model.py`](src/dengue_wolbachia/model.py)
+as the pure function `rhs(t, y, params)`, with no global state, ready to use
+as the `args` of `scipy.integrate.solve_ivp`.
 
-### Supuestos deliberados (ver también los comentarios en `model.py`)
+### Deliberate assumptions (see also the comments in `model.py`)
 
-1. **Bloqueo viral.** $W_F$ no aparece en $\dot I$: las hembras con
-   *Wolbachia* no transmiten dengue, así que no existe compartimento
-   $W_{FI}$.
-2. **Incompatibilidad citoplasmática (CI).** $CI=N_M/(W_M+N_M)$ es la
-   fracción de apareamientos compatibles. Si $W_M \gg N_M$, $CI\to 0$ y la
-   natalidad silvestre colapsa — es el mecanismo por el cual una liberación
-   suficientemente grande hace que *Wolbachia* desplace a los silvestres.
-3. **Herencia materna.** $\dot W_F$ y $\dot W_M$ dependen solo de $W_F$, sin
-   factor $CI$: *Wolbachia* se hereda únicamente de la madre. Por eso no hay
-   ninguna ecuación que convierta un mosquito silvestre en portador — la
-   única forma de que aparezcan portadores es que nazcan de una madre
-   portadora, o que se liberen desde afuera del sistema.
-4. **Competencia denso-dependiente compartida.** Los términos $\beta X P$
-   son mortalidad adicional proporcional a la densidad total $P$: silvestres
-   y portadores comparten el mismo pozo de recursos larvarios.
-5. **Población humana cerrada.** $\dot S+\dot I+\dot R=0$ por construcción
-   (sin natalidad/mortalidad humana en el modelo).
+1. **Viral blocking.** $W_F$ does not appear in $\dot I$: Wolbachia-carrying
+   females do not transmit dengue, so there is no $W_{FI}$
+   compartment.
+2. **Cytoplasmic incompatibility (CI).** $CI=N_M/(W_M+N_M)$ is the
+   fraction of compatible matings. If $W_M \gg N_M$, $CI\to 0$ and wild
+   natality collapses — this is the mechanism by which a sufficiently
+   large release makes *Wolbachia* displace the wild population.
+3. **Maternal inheritance.** $\dot W_F$ and $\dot W_M$ depend only on $W_F$, with
+   no $CI$ factor: *Wolbachia* is inherited exclusively from the mother. That's
+   why there is no equation that converts a wild mosquito into a carrier — the
+   only way carriers can appear is by being born to a carrier mother, or by
+   being released from outside the system.
+4. **Shared density-dependent competition.** The $\beta X P$ terms
+   are additional mortality proportional to the total density $P$: wild and
+   carrier mosquitoes share the same pool of larval resources.
+5. **Closed human population.** $\dot S+\dot I+\dot R=0$ by construction
+   (no human natality/mortality in the model).
 
-### Detalles numéricos
+### Numerical details
 
-- $CI$ se regulariza como `CI = N_M / (W_M + N_M + eps)` con `eps=1e-12`.
-- Integración con `scipy.integrate.solve_ivp`, método `LSODA` o `Radau`
-  (nunca `odeint`): el sistema es rígido porque las tasas de mosquito
-  (escala de días) convive con la pérdida de inmunidad (escala de meses).
-  `rtol=1e-8`, `atol=1e-10` por defecto, configurables en `config/config.yaml`.
-- Positividad: valores negativos de orden $10^{-12}$ (ruido del integrador)
-  se recortan a 0; valores negativos apreciables (> `1e-6`) hacen fallar la
-  integración con un `ValueError` explícito en vez de esconderse.
+- $CI$ is regularized as `CI = N_M / (W_M + N_M + eps)` with `eps=1e-12`.
+- Integration via `scipy.integrate.solve_ivp`, method `LSODA` or `Radau`
+  (never `odeint`): the system is stiff because mosquito rates
+  (day timescale) coexist with the loss of immunity (month timescale).
+  `rtol=1e-8`, `atol=1e-10` by default, configurable in `config/config.yaml`.
+- Positivity: negative values on the order of $10^{-12}$ (integrator
+  noise) are clipped to 0; appreciable negative values (> `1e-6`) make the
+  integration fail with an explicit `ValueError` instead of being hidden.
 
-### El control: liberación única en $t=0$
+### The control: a single release at $t=0$
 
-La liberación de *Wolbachia* ocurre una sola vez, antes de que arranque la
-simulación, así que se modela directamente como parte de la condición
-inicial (se le suma la cantidad liberada a $W_F(0)$/$W_M(0)$) — no hace
-falta partir la integración en tramos ni ningún término de liberación
-dentro de las ecuaciones.
+The *Wolbachia* release happens exactly once, before the simulation
+starts, so it is modeled directly as part of the initial
+condition (the released amount is added to $W_F(0)$/$W_M(0)$) — there is no
+need to split the integration into segments or to add any release term
+inside the equations.
 
-### Número reproductivo básico ($R_0$)
+### Basic reproduction number ($R_0$)
 
 $$R_0=\sqrt{\dfrac{\mu_H S^{*}\,\mu_N N_{FS}^{*}}{\alpha_H(\alpha_N+\beta_N P^{*})}},$$
 
-evaluado en el equilibrio silvestre libre de enfermedad (línea base, sin
-control), por matriz de próxima generación sobre $(I,N_{FI})$. Implementado
-en [`equilibria.py`](src/dengue_wolbachia/equilibria.py).
+evaluated at the disease-free wild equilibrium (baseline, no
+control), via the next-generation matrix over $(I,N_{FI})$. Implemented
+in [`equilibria.py`](src/dengue_wolbachia/equilibria.py).
 
-## Estructura del proyecto
+## Project structure
 
 ```
 dengue-wolbachia/
-├── config/config.yaml       # todos los parámetros + condición inicial
+├── config/config.yaml       # all parameters + initial condition
 ├── src/dengue_wolbachia/
-│   ├── model.py              # derivadas del sistema (rhs)
+│   ├── model.py              # system derivatives (rhs)
 │   ├── parameters.py         # Parameters, SimulationConfig, load_config
-│   ├── simulate.py           # integración (solve_ivp) + exportación CSV
-│   ├── equilibria.py         # equilibrio silvestre analítico y R0
-│   └── plots.py              # figuras (matplotlib puro, etiquetas en inglés)
+│   ├── simulate.py           # integration (solve_ivp) + CSV export
+│   ├── equilibria.py         # analytic wild equilibrium and R0
+│   └── plots.py               # figures (plain matplotlib, labels in English)
 ├── scripts/
-│   └── run_baseline_vs_control.py   # el único script: corre el caso completo
+│   └── run_baseline_vs_control.py   # the only script: runs the full case
 ├── tests/                    # pytest
-└── outputs/{data,figures}/   # CSV y PNG/PDF generados
+└── outputs/{data,figures}/   # generated CSV and PNG/PDF
 ```
 
-## Uso
+## Usage
 
 ```bash
 python scripts/run_baseline_vs_control.py
 ```
 
-Esto corre las dos simulaciones (línea base y control), imprime $R_0$ y los
-valores finales de infectados en consola, y exporta:
+This runs the two simulations (baseline and control), prints $R_0$ and the
+final infected values to the console, and exports:
 
-- `outputs/data/{baseline,control}.csv` — trayectorias completas de las 9 variables (incluye `C`, incidencia acumulada)
-- `outputs/data/summary.csv` — $R_0$, estado final y casos acumulados/evitados (el único lugar donde $R_0$ queda guardado, no solo impreso en consola)
-- `outputs/figures/comparison.{png,pdf}` — $I(t)$: línea base vs. control, en un solo eje
-- `outputs/figures/baseline_timeseries.{png,pdf}` — paneles apilados de la línea base
-- `outputs/figures/control_timeseries.{png,pdf}` — paneles apilados del caso con control
+- `outputs/data/{baseline,control}.csv` — full trajectories of the 9 variables (includes `C`, cumulative incidence)
+- `outputs/data/summary.csv` — $R_0$, final state, and cumulative/averted cases (the only place where $R_0$ is saved, not just printed to console)
+- `outputs/figures/comparison.{png,pdf}` — $I(t)$: baseline vs. control, on a single axis
+- `outputs/figures/baseline_timeseries.{png,pdf}` — stacked panels of the baseline
+- `outputs/figures/control_timeseries.{png,pdf}` — stacked panels of the control case
 
-Parámetros del experimento ajustables por línea de comandos:
+Experiment parameters adjustable from the command line:
 
 ```bash
 python scripts/run_baseline_vs_control.py --release-fraction 0.5 --t-final 1000
 ```
 
-- `--release-fraction`: fracción de la densidad de equilibrio silvestre
-  ($P^*$) liberada como $W_F$ y $W_M$ en $t=0$ (por defecto 0.35 — ya
-  comprobado que basta para que *Wolbachia* se establezca con estos
-  parámetros PROVISIONALES).
-- `--t-final`: duración de la simulación en días (por defecto 200).
+- `--release-fraction`: fraction of the wild equilibrium density
+  ($P^*$) released as $W_F$ and $W_M$ at $t=0$ (default 0.35 — already
+  confirmed to be enough for *Wolbachia* to establish with these
+  PROVISIONAL parameters).
+- `--t-final`: simulation duration in days (default 200).
 
-## Resultado esperado
+## Expected result
 
-Con los parámetros PROVISIONALES por defecto: $R_0\approx2.86$ sin control
-(el dengue se sostiene solo). Liberando el 35% de la población silvestre de
-equilibrio como mosquitos wMel en $t=0$, *Wolbachia* se establece por
-completo (los silvestres se extinguen) y las infecciones caen a
-prácticamente cero en menos de 100 días — mientras que sin control el
-dengue se estabiliza en un nivel endémico permanente.
+With the default PROVISIONAL parameters: $R_0\approx2.86$ with no control
+(dengue is self-sustaining). Releasing 35% of the wild equilibrium
+population as wMel mosquitoes at $t=0$, *Wolbachia* establishes
+completely (the wild population goes extinct) and infections drop to
+practically zero in under 100 days — whereas without control
+dengue stabilizes at a permanent endemic level.
 
 ## Tests
 
@@ -177,8 +177,7 @@ dengue se estabiliza en un nivel endémico permanente.
 pytest tests/ -q
 ```
 
-Cubren: validación de parámetros, reducción del modelo a la dinámica
-silvestre pura cuando *Wolbachia* está en cero, el equilibrio silvestre
-analítico y $R_0$, conservación de la población humana, positividad, y el
-establecimiento de *Wolbachia* tras una liberación única suficientemente
-grande.
+Covers: parameter validation, reduction of the model to pure wild
+dynamics when *Wolbachia* is at zero, the analytic wild equilibrium and
+$R_0$, conservation of the human population, positivity, and the
+establishment of *Wolbachia* after a single sufficiently large release.

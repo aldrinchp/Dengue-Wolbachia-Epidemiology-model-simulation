@@ -1,4 +1,4 @@
-"""Modelo epidemiológico de dengue con control biológico por Wolbachia."""
+"""Epidemiological model of dengue with biological control via Wolbachia."""
 
 from dengue_wolbachia.parameters import (
     STATE_VARS,

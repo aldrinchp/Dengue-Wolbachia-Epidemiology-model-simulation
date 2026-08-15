@@ -1,10 +1,10 @@
-"""Carga y validación de parámetros del modelo dengue-Wolbachia.
+"""Loading and validation of dengue-Wolbachia model parameters.
 
-Los parámetros biológicos viven en :class:`Parameters`, una dataclass
-inmutable con validación en ``__post_init__``. La configuración de
-simulación (condición inicial, tolerancias del integrador) vive en
-:class:`SimulationConfig`, construida a partir de ``config/config.yaml``
-mediante :func:`load_config`.
+The biological parameters live in :class:`Parameters`, an immutable
+dataclass with validation in ``__post_init__``. The simulation
+configuration (initial condition, integrator tolerances) lives in
+:class:`SimulationConfig`, built from ``config/config.yaml``
+via :func:`load_config`.
 """
 
 from __future__ import annotations
@@ -16,10 +16,10 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-# Orden fijo de las 9 variables de estado (8 de estado + C = incidencia
-# acumulada). Todo el paquete (model.py, simulate.py, plots.py) debe
-# construir/leer vectores de estado en este orden para evitar errores de
-# indexación silenciosos.
+# Fixed order of the 9 state variables (8 state + C = cumulative
+# incidence). The whole package (model.py, simulate.py, plots.py) must
+# build/read state vectors in this order to avoid silent indexing
+# errors.
 STATE_VARS: tuple[str, ...] = (
     "N_FS",
     "N_FI",
@@ -37,42 +37,42 @@ _CONFIG_PATH_DEFAULT = Path(__file__).resolve().parents[2] / "config" / "config.
 
 @dataclass(frozen=True)
 class Parameters:
-    """Parámetros biológicos del sistema de 8 EDOs.
+    """Biological parameters of the 8-ODE system.
 
-    Todas las tasas están en unidades de día⁻¹ (o el análogo per-cápita
-    correspondiente).
+    All rates are in units of day⁻¹ (or the corresponding per-capita
+    analog).
 
     Parameters
     ----------
     rho_N : float
-        Fecundidad per cápita de hembras silvestres.
+        Per-capita fecundity of wild females.
     alpha_N : float
-        Mortalidad per cápita de mosquitos silvestres (ambos sexos).
+        Per-capita mortality of wild mosquitoes (both sexes).
     beta_N : float
-        Coeficiente de competencia denso-dependiente, silvestres.
+        Density-dependent competition coefficient, wild.
     f : float
-        Proporción de hembras al nacer en la población silvestre, en (0, 1).
+        Proportion of females at birth in the wild population, in (0, 1).
     rho_W : float
-        Fecundidad per cápita de hembras portadoras de Wolbachia.
+        Per-capita fecundity of Wolbachia-carrying females.
     alpha_W : float
-        Mortalidad per cápita de mosquitos portadores de Wolbachia.
+        Per-capita mortality of Wolbachia-carrying mosquitoes.
     beta_W : float
-        Coeficiente de competencia denso-dependiente, portadores.
+        Density-dependent competition coefficient, carriers.
     q : float
-        Proporción de hembras al nacer en la población con Wolbachia, en (0, 1).
+        Proportion of females at birth in the Wolbachia-carrying population, in (0, 1).
     mu_N : float
-        Tasa de transmisión humano -> mosquito (adquisición del virus).
+        Human -> mosquito transmission rate (virus acquisition).
     mu_H : float
-        Tasa de transmisión mosquito -> humano (fuerza de infección humana).
+        Mosquito -> human transmission rate (human force of infection).
     alpha_H : float
-        Tasa de recuperación de humanos infectados.
+        Recovery rate of infected humans.
     gamma : float
-        Tasa de pérdida de inmunidad temporal (R -> S).
+        Rate of loss of temporary immunity (R -> S).
     H : float
-        Población humana total (constante, S + I + R = H).
+        Total human population (constant, S + I + R = H).
     eps : float
-        Regularización del cociente de compatibilidad citoplasmática
-        ``CI = N_M / (W_M + N_M + eps)``. Ver model.py.
+        Regularization of the cytoplasmic incompatibility ratio
+        ``CI = N_M / (W_M + N_M + eps)``. See model.py.
     """
 
     rho_N: float
@@ -109,36 +109,36 @@ class Parameters:
             value = getattr(self, name)
             if not np.isfinite(value) or value <= 0:
                 raise ValueError(
-                    f"Parameters.{name} debe ser positivo y finito, recibido {value!r}"
+                    f"Parameters.{name} must be positive and finite, got {value!r}"
                 )
 
         for name in ("f", "q"):
             value = getattr(self, name)
             if not (0.0 < value < 1.0):
                 raise ValueError(
-                    f"Parameters.{name} debe estar en (0, 1), recibido {value!r}"
+                    f"Parameters.{name} must be in (0, 1), got {value!r}"
                 )
 
         if self.rho_N * self.f <= self.alpha_N:
             warnings.warn(
-                "rho_N * f <= alpha_N: la población silvestre no es viable "
-                "en ausencia de Wolbachia (natalidad de hembras no supera "
-                "la mortalidad). P* silvestre sería <= 0.",
+                "rho_N * f <= alpha_N: the wild population is not viable "
+                "in the absence of Wolbachia (female natality does not "
+                "exceed mortality). Wild P* would be <= 0.",
                 stacklevel=2,
             )
 
         if self.rho_W * self.q <= self.alpha_W:
             warnings.warn(
-                "rho_W * q <= alpha_W: la población con Wolbachia no es "
-                "viable de forma autónoma (natalidad de hembras no supera "
-                "la mortalidad). P* con Wolbachia sería <= 0.",
+                "rho_W * q <= alpha_W: the Wolbachia population is not "
+                "viable on its own (female natality does not exceed "
+                "mortality). Wolbachia P* would be <= 0.",
                 stacklevel=2,
             )
 
 
 @dataclass(frozen=True)
 class NumericsConfig:
-    """Configuración del integrador ODE."""
+    """ODE integrator configuration."""
 
     method: str
     rtol: float
@@ -147,16 +147,16 @@ class NumericsConfig:
     def __post_init__(self) -> None:
         if self.method not in ("LSODA", "Radau"):
             raise ValueError(
-                "numerics.method debe ser 'LSODA' o 'Radau' (el sistema es "
-                f"rígido; odeint no es apto), recibido {self.method!r}"
+                "numerics.method must be 'LSODA' or 'Radau' (the system is "
+                f"stiff; odeint is not suitable), got {self.method!r}"
             )
         if self.rtol <= 0 or self.atol <= 0:
-            raise ValueError("numerics.rtol y numerics.atol deben ser positivos")
+            raise ValueError("numerics.rtol and numerics.atol must be positive")
 
 
 @dataclass(frozen=True)
 class SimulationConfig:
-    """Configuración completa de una corrida: parámetros + estado inicial + numérica."""
+    """Complete configuration of a run: parameters + initial state + numerics."""
 
     parameters: Parameters
     initial_state: np.ndarray
@@ -165,32 +165,32 @@ class SimulationConfig:
     def __post_init__(self) -> None:
         if self.initial_state.shape != (len(STATE_VARS),):
             raise ValueError(
-                f"initial_state debe tener forma ({len(STATE_VARS)},), "
-                f"recibido {self.initial_state.shape!r}"
+                f"initial_state must have shape ({len(STATE_VARS)},), "
+                f"got {self.initial_state.shape!r}"
             )
         if np.any(self.initial_state < 0):
-            raise ValueError("initial_state no puede contener valores negativos")
+            raise ValueError("initial_state cannot contain negative values")
 
 
 def _initial_state_from_dict(ic: dict[str, float]) -> np.ndarray:
     missing = [name for name in STATE_VARS if name not in ic]
     if missing:
-        raise ValueError(f"initial_conditions incompleto, faltan: {missing}")
+        raise ValueError(f"initial_conditions incomplete, missing: {missing}")
     return np.array([float(ic[name]) for name in STATE_VARS], dtype=float)
 
 
 def load_config(config_path: str | Path = _CONFIG_PATH_DEFAULT) -> SimulationConfig:
-    """Carga ``config/config.yaml`` y construye la configuración de simulación.
+    """Load ``config/config.yaml`` and build the simulation configuration.
 
     Parameters
     ----------
     config_path : str or Path
-        Ruta al YAML de configuración.
+        Path to the configuration YAML.
 
     Returns
     -------
     SimulationConfig
-        Configuración lista para pasar a ``simulate.integrate``.
+        Configuration ready to pass to ``simulate.integrate``.
     """
     config_path = Path(config_path)
     with open(config_path, encoding="utf-8") as fh:

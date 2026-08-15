@@ -1,4 +1,4 @@
-"""Tests de integración: convergencia al equilibrio, conservación y positividad."""
+"""Integration tests: convergence to equilibrium, conservation, and positivity."""
 
 from __future__ import annotations
 
@@ -13,15 +13,15 @@ _IDX = {name: i for i, name in enumerate(STATE_VARS)}
 
 
 # ---------------------------------------------------------------------------
-# Convergencia al equilibrio analítico
+# Convergence to the analytic equilibrium
 # ---------------------------------------------------------------------------
 
 def test_converges_to_wild_equilibrium_P_star() -> None:
     cfg = load_config()
     params = cfg.parameters
-    # Sin Wolbachia, sin dengue: I=N_FI=0 se mantiene en 0 exactamente
-    # (ambos términos de acoplamiento se anulan), así que el sistema se
-    # reduce al submodelo silvestre puro.
+    # No Wolbachia, no dengue: I=N_FI=0 stays exactly at 0
+    # (both coupling terms vanish), so the system reduces to the pure
+    # wild submodel.
     y0 = np.array([500.0, 0.0, 8000.0, 0.0, 0.0, params.H, 0.0, 0.0, 0.0])
     result = integrate(params, y0, (0.0, 5000.0), cfg.numerics)
 
@@ -37,7 +37,7 @@ def test_converges_to_wild_equilibrium_P_star() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Conservación de la población humana
+# Conservation of the human population
 # ---------------------------------------------------------------------------
 
 def test_human_population_conserved() -> None:
@@ -49,7 +49,7 @@ def test_human_population_conserved() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Positividad
+# Positivity
 # ---------------------------------------------------------------------------
 
 def test_no_negative_values_in_baseline_simulation() -> None:
@@ -76,7 +76,7 @@ def test_positivity_clip_raises_on_appreciable_negative() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Liberación única de Wolbachia en t=0 (vía condición inicial), como en
+# Single Wolbachia release at t=0 (via initial condition), as in
 # scripts/run_baseline_vs_control.py
 # ---------------------------------------------------------------------------
 
@@ -90,8 +90,8 @@ def test_single_release_at_t0_establishes_wolbachia() -> None:
     t_eval = np.linspace(0.0, 730.0, 200)
     result = integrate(params, y0, (0.0, 730.0), cfg.numerics, t_eval=t_eval)
 
-    # Con una liberación suficientemente grande, Wolbachia se establece y
-    # desplaza a los silvestres (biestabilidad por incompatibilidad
-    # citoplasmática — ver model.py).
+    # With a sufficiently large release, Wolbachia establishes and
+    # displaces the wild population (bistability due to cytoplasmic
+    # incompatibility — see model.py).
     assert result.y[_IDX["W_F"], -1] > 0
     assert result.y[_IDX["N_FS"], -1] == pytest.approx(0.0, abs=1e-3)

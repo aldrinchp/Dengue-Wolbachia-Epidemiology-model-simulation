@@ -1,6 +1,6 @@
-"""Tests del equilibrio silvestre analítico y R0 (equilibria.py).
+"""Tests for the analytic wild equilibrium and R0 (equilibria.py).
 
-Los tests de convergencia por integración numérica están en test_simulate.py.
+Numerical-integration convergence tests are in test_simulate.py.
 """
 
 from __future__ import annotations

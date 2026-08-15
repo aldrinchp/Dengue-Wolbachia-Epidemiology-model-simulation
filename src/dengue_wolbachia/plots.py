@@ -1,10 +1,10 @@
-"""Figuras: series de tiempo apiladas y comparación de infectados.
+"""Figures: stacked time series and infection comparison.
 
-Matplotlib puro (sin seaborn), paleta apta para daltonismo (Okabe-Ito),
-fuente legible en impresión, exportación en PNG (300 dpi) y PDF vectorial.
-Etiquetas y títulos de las figuras en inglés (a pedido). Cada función es de
-solo-presentación: recibe un ``SimulationResult`` ya calculado y no ejecuta
-ninguna integración por sí misma.
+Plain matplotlib (no seaborn), colorblind-friendly palette (Okabe-Ito),
+print-legible font, PNG (300 dpi) and vector PDF export.
+Figure labels and titles in English (as requested). Each function is
+presentation-only: it receives an already-computed ``SimulationResult`` and
+does not run any integration itself.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 from dengue_wolbachia.simulate import SimulationResult
 
-# Paleta Okabe-Ito, apta para daltonismo.
+# Okabe-Ito palette, colorblind-friendly.
 PALETTE = {
     "black": "#000000",
     "orange": "#E69F00",
@@ -46,7 +46,7 @@ plt.rcParams.update(
         "legend.borderpad": 0.7,
         "figure.dpi": 100,
         "savefig.dpi": 300,
-        "pdf.fonttype": 42,  # fuentes embebidas como texto, no curvas, en el PDF
+        "pdf.fonttype": 42,  # fonts embedded as text, not curves, in the PDF
         "axes.spines.top": False,
         "axes.spines.right": False,
     }
@@ -54,7 +54,7 @@ plt.rcParams.update(
 
 
 def _save(fig: plt.Figure, out_stem: str | Path) -> None:
-    """Guarda ``fig`` como ``{out_stem}.png`` (300 dpi) y ``{out_stem}.pdf`` (vectorial)."""
+    """Save ``fig`` as ``{out_stem}.png`` (300 dpi) and ``{out_stem}.pdf`` (vector)."""
     out_stem = Path(out_stem)
     out_stem.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_stem.with_suffix(".png"), dpi=300, bbox_inches="tight")

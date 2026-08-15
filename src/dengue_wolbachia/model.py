@@ -1,41 +1,43 @@
-"""Derivadas del sistema de 9 EDOs dengue-Wolbachia (8 de estado + 1 de
-incidencia acumulada).
+"""Derivatives of the 9-ODE dengue-Wolbachia system (8 state variables + 1
+cumulative incidence variable).
 
-Este módulo contiene una única función pública, :func:`rhs`, sin estado
-global: recibe ``params`` de forma explícita (para usar como ``args`` de
-``scipy.integrate.solve_ivp``) y no depende de ningún valor mutable externo.
+This module contains a single public function, :func:`rhs`, with no global
+state: it receives ``params`` explicitly (so it can be used as ``args`` of
+``scipy.integrate.solve_ivp``) and does not depend on any external mutable
+value.
 
-Supuestos del modelo que se documentan aquí porque son ausencias o
-simplificaciones deliberadas, no descuidos:
+Model assumptions documented here because they are deliberate omissions or
+simplifications, not oversights:
 
-1. **Bloqueo viral.** Las hembras con Wolbachia (``W_F``) no transmiten el
-   virus del dengue: no existe un compartimento ``W_FI`` y ``W_F`` no
-   aparece en ``dI/dt``. Wolbachia bloquea la replicación viral dentro del
-   mosquito, así que una hembra portadora nunca se vuelve infecciosa.
-2. **Incompatibilidad citoplasmática (CI).** Cuando una hembra silvestre se
-   apareacon un macho portador de Wolbachia, la descendencia no es viable.
-   ``CI = N_M / (W_M + N_M)`` es la fracción de apareamientos compatibles;
-   por eso multiplica la natalidad silvestre. Si ``W_M >> N_M``, ``CI -> 0``
-   y la natalidad silvestre colapsa: este es el mecanismo de IIT.
-3. **Herencia materna.** Wolbachia se transmite solo de madre a hijos: las
-   ecuaciones de ``W_F`` y ``W_M`` dependen únicamente de ``W_F`` (nunca de
-   ``W_M`` como progenitor) y no llevan factor de compatibilidad, porque una
-   hembra portadora siempre produce descendencia portadora viable.
-4. **Competencia denso-dependiente compartida.** Los términos ``beta*X*P``
-   son mortalidad adicional proporcional a la densidad total de mosquitos
-   ``P`` (silvestres + portadores): comparten el mismo pozo de recursos
-   larvarios, así que una población compite con la otra por espacio/comida.
-5. **Población humana cerrada.** No hay natalidad ni mortalidad humana en el
-   modelo: ``d(S+I+R)/dt = 0`` por construcción (verificado en
+1. **Viral blocking.** Wolbachia-carrying females (``W_F``) do not transmit
+   the dengue virus: there is no ``W_FI`` compartment and ``W_F`` does not
+   appear in ``dI/dt``. Wolbachia blocks viral replication inside the
+   mosquito, so a carrier female never becomes infectious.
+2. **Cytoplasmic incompatibility (CI).** When a wild female mates with a
+   Wolbachia-carrying male, the offspring are not viable.
+   ``CI = N_M / (W_M + N_M)`` is the fraction of compatible matings;
+   that's why it multiplies wild natality. If ``W_M >> N_M``, ``CI -> 0``
+   and wild natality collapses: this is the IIT mechanism.
+3. **Maternal inheritance.** Wolbachia is transmitted only from mother to
+   offspring: the equations for ``W_F`` and ``W_M`` depend solely on
+   ``W_F`` (never on ``W_M`` as a parent) and carry no compatibility
+   factor, because a carrier female always produces viable carrier
+   offspring.
+4. **Shared density-dependent competition.** The ``beta*X*P`` terms
+   are additional mortality proportional to the total mosquito density
+   ``P`` (wild + carriers): they share the same pool of larval resources,
+   so one population competes with the other for space/food.
+5. **Closed human population.** There is no human natality or mortality in
+   the model: ``d(S+I+R)/dt = 0`` by construction (verified in
    ``tests/test_simulate.py``).
-6. **Incidencia acumulada (``C``).** ``I`` es prevalencia (cuántos están
-   infectados en el instante ``t``: sube y baja porque hay entrada y
-   salida). ``C`` es incidencia acumulada: solo entrada, nunca sale nadie de
-   ``C``. Ambas comparten el mismo término de entrada
-   (``mu_H*S*N_FI``), pero ``dC/dt`` no tiene el término ``-alpha_H*I`` de
-   recuperación, así que ``C`` es monótonamente creciente y ``C(t) >= I(t)``
-   siempre — es el conteo de "casos totales desde el día 0", como en un
-   reporte de vigilancia epidemiológica.
+6. **Cumulative incidence (``C``).** ``I`` is prevalence (how many are
+   infected at instant ``t``: it goes up and down because there is inflow
+   and outflow). ``C`` is cumulative incidence: only inflow, nobody ever
+   leaves ``C``. Both share the same inflow term
+   (``mu_H*S*N_FI``), but ``dC/dt`` has no ``-alpha_H*I`` recovery term,
+   so ``C`` is monotonically increasing and ``C(t) >= I(t)`` always — it
+   is the count of "total cases since day 0", as in an epidemiological
+   surveillance report.
 """
 
 from __future__ import annotations
@@ -46,27 +48,27 @@ from dengue_wolbachia.parameters import Parameters
 
 
 def compatibility_index(N_M: float, W_M: float, eps: float) -> float:
-    """Fracción de apareamientos compatibles (incompatibilidad citoplasmática).
+    """Fraction of compatible matings (cytoplasmic incompatibility).
 
-    ``CI = N_M / (W_M + N_M)``: la probabilidad de que una hembra silvestre
-    se aparee con un macho silvestre (compatible) en lugar de uno portador
-    de Wolbachia (incompatible, produce descendencia inviable).
+    ``CI = N_M / (W_M + N_M)``: the probability that a wild female mates
+    with a wild male (compatible) instead of a Wolbachia-carrying one
+    (incompatible, producing non-viable offspring).
 
     Parameters
     ----------
     N_M : float
-        Machos silvestres.
+        Wild males.
     W_M : float
-        Machos portadores de Wolbachia.
+        Wolbachia-carrying males.
     eps : float
-        Regularización para evitar la indeterminación 0/0 cuando no hay
-        machos de ningún tipo.
+        Regularization to avoid the 0/0 indeterminacy when there are no
+        males of either kind.
 
     Returns
     -------
     float
-        ``CI`` en ``[0, 1]``. Devuelve 0 si el denominador regularizado es
-        menor que ``eps`` (no hay machos: no puede haber apareamiento).
+        ``CI`` in ``[0, 1]``. Returns 0 if the regularized denominator is
+        smaller than ``eps`` (no males: there can be no mating).
     """
     denom = W_M + N_M
     if denom < eps:
@@ -75,32 +77,32 @@ def compatibility_index(N_M: float, W_M: float, eps: float) -> float:
 
 
 def rhs(t: float, y: np.ndarray, params: Parameters) -> np.ndarray:
-    """Derivadas del sistema dengue-Wolbachia en el instante ``t``.
+    """Derivatives of the dengue-Wolbachia system at instant ``t``.
 
-    Firma compatible con ``scipy.integrate.solve_ivp(fun=rhs, ..., args=(params,))``.
+    Signature compatible with ``scipy.integrate.solve_ivp(fun=rhs, ..., args=(params,))``.
 
     Parameters
     ----------
     t : float
-        Tiempo (no usado explícitamente: el sistema es autónomo, pero
-        ``solve_ivp`` siempre pasa ``t`` como primer argumento).
+        Time (not used explicitly: the system is autonomous, but
+        ``solve_ivp`` always passes ``t`` as the first argument).
     y : np.ndarray
-        Vector de estado de 9 componentes en el orden
-        ``(N_FS, N_FI, N_M, W_F, W_M, S, I, R, C)`` (ver ``parameters.STATE_VARS``).
+        9-component state vector in the order
+        ``(N_FS, N_FI, N_M, W_F, W_M, S, I, R, C)`` (see ``parameters.STATE_VARS``).
     params : Parameters
-        Parámetros biológicos del modelo.
+        Biological parameters of the model.
 
     Returns
     -------
     np.ndarray
-        Vector de derivadas ``dy/dt``, mismo orden y forma que ``y``.
+        Derivative vector ``dy/dt``, same order and shape as ``y``.
     """
     N_FS, N_FI, N_M, W_F, W_M, S, I, R, C = y
 
     P = N_FS + N_FI + N_M + W_F + W_M
     CI = compatibility_index(N_M, W_M, params.eps)
 
-    N_F = N_FI + N_FS  # total de hembras silvestres (susceptibles + infectadas)
+    N_F = N_FI + N_FS  # total wild females (susceptible + infected)
 
     dN_FS = (
         params.rho_N * params.f * N_F * CI
@@ -115,7 +117,7 @@ def rhs(t: float, y: np.ndarray, params: Parameters) -> np.ndarray:
         - params.beta_N * N_M * P
     )
 
-    # W_F no lleva factor CI: herencia materna pura (supuesto 3).
+    # W_F carries no CI factor: pure maternal inheritance (assumption 3).
     dW_F = params.rho_W * params.q * W_F - params.alpha_W * W_F - params.beta_W * W_F * P
     dW_M = (
         params.rho_W * (1.0 - params.q) * W_F
@@ -123,14 +125,14 @@ def rhs(t: float, y: np.ndarray, params: Parameters) -> np.ndarray:
         - params.beta_W * W_M * P
     )
 
-    # W_F no aparece aquí: bloqueo viral (supuesto 1), no hay compartimento W_FI.
+    # W_F does not appear here: viral blocking (assumption 1), no W_FI compartment.
     incidence = params.mu_H * S * N_FI
     dS = params.gamma * R - incidence
     dI = incidence - params.alpha_H * I
     dR = params.alpha_H * I - params.gamma * R
 
-    # C acumula la misma entrada que I, pero sin el término de recuperación
-    # (supuesto 6): incidencia acumulada, nunca decrece.
+    # C accumulates the same inflow as I, but without the recovery term
+    # (assumption 6): cumulative incidence, never decreases.
     dC = incidence
 
     return np.array([dN_FS, dN_FI, dN_M, dW_F, dW_M, dS, dI, dR, dC], dtype=float)

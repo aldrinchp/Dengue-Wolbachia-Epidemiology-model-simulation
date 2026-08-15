@@ -1,4 +1,4 @@
-"""Tests de la Etapa 2: derivadas del modelo (model.py)."""
+"""Stage 2 tests: model derivatives (model.py)."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def test_compatibility_index_collapses_as_wolbachia_males_dominate() -> None:
 
 
 # ---------------------------------------------------------------------------
-# rhs: pureza y no mutación del argumento de entrada
+# rhs: purity and non-mutation of the input argument
 # ---------------------------------------------------------------------------
 
 def test_rhs_does_not_mutate_input_state() -> None:
@@ -51,19 +51,19 @@ def test_rhs_is_deterministic() -> None:
     params = load_config().parameters
     y = np.array([1000.0, 10.0, 1000.0, 0.0, 0.0, 9000.0, 100.0, 900.0, 100.0])
     d1 = rhs(0.0, y, params)
-    d2 = rhs(5.0, y, params)  # sistema autónomo: t no debe influir
+    d2 = rhs(5.0, y, params)  # autonomous system: t must have no effect
     assert np.array_equal(d1, d2)
 
 
 # ---------------------------------------------------------------------------
-# Wolbachia en cero => se reduce al modelo silvestre + dengue (sin CI activo)
+# Wolbachia at zero => reduces to the wild model + dengue (no active CI)
 # ---------------------------------------------------------------------------
 
 def _reduced_wild_rhs(t: float, y: np.ndarray, params) -> np.ndarray:
-    """Reimplementación directa e independiente del submodelo sin Wolbachia.
+    """Direct, independent reimplementation of the Wolbachia-free submodel.
 
-    Con W_F = W_M = 0, CI = N_M/(N_M+eps) ~= 1: se reescribe aquí a mano
-    (CI = 1 exacto) como referencia independiente para el test de reducción.
+    With W_F = W_M = 0, CI = N_M/(N_M+eps) ~= 1: rewritten here by hand
+    (CI = exactly 1) as an independent reference for the reduction test.
     """
     N_FS, N_FI, N_M, S, I, R = y
     P = N_FS + N_FI + N_M
@@ -108,7 +108,7 @@ def test_wolbachia_zero_reduces_to_wild_model() -> None:
     assert sol_full.success
     assert sol_reduced.success
 
-    # W_F, W_M deben permanecer exactamente en cero (sin fuente propia).
+    # W_F, W_M must remain exactly zero (no source of their own).
     W_F, W_M = sol_full.y[3], sol_full.y[4]
     assert np.allclose(W_F, 0.0, atol=1e-9)
     assert np.allclose(W_M, 0.0, atol=1e-9)
@@ -141,5 +141,5 @@ def test_dC_dt_equals_incidence_term() -> None:
     S = y[5]
     expected_incidence = params.mu_H * S * y[1]
     assert dy[8] == pytest.approx(expected_incidence)
-    # dC/dt no resta nada (a diferencia de dI/dt): C es monótonamente creciente.
+    # dC/dt subtracts nothing (unlike dI/dt): C is monotonically increasing.
     assert dy[8] >= 0

@@ -1,4 +1,4 @@
-"""Tests de carga y validación de parámetros."""
+"""Tests for parameter loading and validation."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def test_parameters_rejects_nonpositive_rate() -> None:
     with pytest.raises(ValueError):
         Parameters(
             rho_N=1.25,
-            alpha_N=0.0,  # inválido: debe ser > 0
+            alpha_N=0.0,  # invalid: must be > 0
             beta_N=1e-4,
             f=0.5,
             rho_W=1.1,
@@ -81,4 +81,4 @@ def test_parameters_warns_when_wild_population_not_viable() -> None:
             gamma=0.0055,
             H=100000,
         )
-    assert any("silvestre no es viable" in str(w.message) for w in caught)
+    assert any("wild population is not viable" in str(w.message) for w in caught)
