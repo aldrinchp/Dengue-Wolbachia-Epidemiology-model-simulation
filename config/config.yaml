@@ -1,0 +1,49 @@
+# =============================================================================
+# Parámetros del modelo dengue-Wolbachia (caso único: cepa wMel).
+# Unidad de tiempo: DÍAS en todo el archivo.
+#
+# Todos los valores marcados "PROVISIONAL - reemplazar" son órdenes de
+# magnitud de literatura general sobre Aedes aegypti y deben sustituirse
+# por los valores de la referencia bibliográfica del usuario antes de
+# publicar cualquier resultado.
+# =============================================================================
+
+mosquito_wild:
+  rho_N: 1.25        # PROVISIONAL - reemplazar. Fecundidad per cápita silvestre (día^-1)
+  alpha_N: 0.04      # PROVISIONAL - reemplazar. Mortalidad per cápita silvestre (vida media ~25 días)
+  beta_N: 1.0e-4     # PROVISIONAL - reemplazar. Competencia denso-dependiente silvestre
+  f: 0.5             # Proporción de hembras al nacer, silvestres
+
+# Cepa wMel: costo de aptitud bajo (la más usada en campo para reemplazo
+# poblacional, p. ej. World Mosquito Program).
+mosquito_wolbachia:
+  rho_W: 1.15        # PROVISIONAL - reemplazar. Fecundidad casi igual a rho_N
+  alpha_W: 0.045     # PROVISIONAL - reemplazar. Mortalidad apenas por encima de alpha_N
+  beta_W: 1.0e-4     # PROVISIONAL - reemplazar. Misma competencia denso-dependiente que silvestres
+  q: 0.5             # Proporción de hembras al nacer, con Wolbachia
+
+human:
+  mu_N: 5.0e-5       # PROVISIONAL - reemplazar. Transmisión humano -> mosquito
+  mu_H: 5.0e-5       # PROVISIONAL - reemplazar. Transmisión mosquito -> humano
+  alpha_H: 0.1428    # 1/7 días. Recuperación del dengue
+  gamma: 0.0055      # PROVISIONAL - reemplazar. ~180 días de inmunidad temporal
+  H: 100000          # Población humana total (constante)
+
+numerics:
+  method: LSODA      # LSODA o Radau: sistema rígido (mosquitos ~días, inmunidad ~meses)
+  rtol: 1.0e-8
+  atol: 1.0e-10
+
+# Condición inicial común a los dos casos (base y control). El caso de
+# control agrega la liberación de Wolbachia en t=0 por encima de esto
+# (ver scripts/run_baseline_vs_control.py) — no se edita aquí.
+initial_conditions:
+  N_FS: 10000.0
+  N_FI: 10.0
+  N_M: 10000.0
+  W_F: 0.0
+  W_M: 0.0
+  S: 99000.0
+  I: 1000.0
+  R: 0.0
+  C: 1000.0          # incidencia acumulada; arranca igual a I(0) (esos 1000 ya son "casos")
