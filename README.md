@@ -164,7 +164,7 @@ python scripts/run_baseline_vs_control.py --release-fraction 0.5 --t-final 1000
 
 ## Expected result
 
-With the default PROVISIONAL parameters: $R_0\approx2.86$ with no control
+With the default PROVISIONAL parameters: $R_0\approx8.18$ with no control
 (dengue is self-sustaining). Releasing 35% of the wild equilibrium
 population as wMel mosquitoes at $t=0$, *Wolbachia* establishes
 completely (the wild population goes extinct) and infections drop to
