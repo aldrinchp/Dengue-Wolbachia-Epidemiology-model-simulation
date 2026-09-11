@@ -119,7 +119,7 @@ inside the equations.
 
 ### Basic reproduction number ($R_0$)
 
-$$R_0=\sqrt{\dfrac{\mu_H S^{*}\,\mu_N N_{FS}^{*}}{\alpha_H(\alpha_N+\beta_N P^{*})}},$$
+$$R_0=\sqrt{\dfrac{\mu_H S^{\ast}\,\mu_N N_{FS}^{\ast}}{\alpha_H(\alpha_N+\beta_N P^{\ast})}},$$
 
 evaluated at the disease-free wild equilibrium (baseline, no
 control), via the next-generation matrix over $(I,N_{FI})$. Implemented
@@ -164,7 +164,7 @@ python scripts/run_baseline_vs_control.py --release-fraction 0.5 --t-final 1000
 ```
 
 - `--release-fraction`: fraction of the wild equilibrium density
-  ($P^*$) released as $W_F$ and $W_M$ at $t=0$ (default 0.35 — already
+  ($P^{\ast}$) released as $W_F$ and $W_M$ at $t=0$ (default 0.35 — already
   confirmed to be enough for *Wolbachia* to establish with these
   PROVISIONAL parameters).
 - `--t-final`: simulation duration in days (default 200).
