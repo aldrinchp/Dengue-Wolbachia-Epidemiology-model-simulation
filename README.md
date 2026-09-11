@@ -1,8 +1,9 @@
 # dengue-wolbachia
 
 Epidemiological model of dengue with biological control via *Wolbachia*: a
-system of 8 ordinary differential equations coupling wild mosquitoes,
-Wolbachia-carrying mosquitoes, and humans with SIRS dynamics.
+system of 9 ordinary differential equations (8 state variables plus
+cumulative incidence) coupling wild mosquitoes, Wolbachia-carrying
+mosquitoes, and humans with SIRS dynamics.
 
 This project simulates **a single case**: the baseline (no control) versus
 a single release of wMel mosquitoes (population replacement) at $t=0$,
@@ -43,6 +44,7 @@ No dependencies beyond `numpy`, `scipy`, `matplotlib`, `pyyaml`, and
 | $S$      | susceptible humans |
 | $I$      | infected humans |
 | $R$      | recovered humans (temporary immunity) |
+| $C$      | cumulative incidence (total cases since $t=0$, never decreases) |
 
 with the auxiliary quantities
 
@@ -63,7 +65,8 @@ $$
 \dot W_M &= \rho_W (1-q)\, W_F - \alpha_W W_M - \beta_W W_M P \\
 \dot S &= \gamma R - \mu_H S N_{FI} \\
 \dot I &= \mu_H S N_{FI} - \alpha_H I \\
-\dot R &= \alpha_H I - \gamma R
+\dot R &= \alpha_H I - \gamma R \\
+\dot C &= \mu_H S N_{FI}
 \end{aligned}
 $$
 
@@ -90,6 +93,10 @@ as the `args` of `scipy.integrate.solve_ivp`.
    carrier mosquitoes share the same pool of larval resources.
 5. **Closed human population.** $\dot S+\dot I+\dot R=0$ by construction
    (no human natality/mortality in the model).
+6. **Cumulative incidence.** $I$ is prevalence (rises and falls with
+   inflow/outflow); $C$ shares the same inflow ($\mu_H S N_{FI}$) but has
+   no recovery term, so it only accumulates and $C(t)\ge I(t)$ always —
+   the total case count since day 0, as in a surveillance report.
 
 ### Numerical details
 
@@ -164,7 +171,7 @@ python scripts/run_baseline_vs_control.py --release-fraction 0.5 --t-final 1000
 
 ## Expected result
 
-With the default PROVISIONAL parameters: $R_0\approx8.18$ with no control
+With the default PROVISIONAL parameters: $R_0\approx8.19$ with no control
 (dengue is self-sustaining). Releasing 35% of the wild equilibrium
 population as wMel mosquitoes at $t=0$, *Wolbachia* establishes
 completely (the wild population goes extinct) and infections drop to
